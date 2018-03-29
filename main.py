@@ -2,10 +2,10 @@
 # coding=UTF8
 
 import cv2
-import math
-import numpy as np
+#import math
+#import numpy as np
 from postItParser import Parser
-from getcolor import getcolor
+#from getcolor import getcolor
 from pdf import PDFgenerator
 import sys, getopt
 
@@ -15,7 +15,10 @@ def main(argv):
 	_resultImages = []
 	_pdfGen = PDFgenerator()
 	_parser = Parser()
-	# parse Program Params
+	# parse Program Params exit if not all params were given
+	if len(argv) <= 1:
+		print('main.py -o <outputfile.pdf> file1 [file2] (Using of * in Filenames is possible)...')
+		sys.exit(2)
 	try:
 		print('Read Args: ', argv)
 		opts, rest = getopt.getopt(argv, "ho:",["help","ofile="])
@@ -48,23 +51,3 @@ def main(argv):
 
 if __name__ == "__main__":
    main(sys.argv[1:])
-
-
-""" i=0
-while(i<7):
-	string1="Bilder/"+str(i)+".jpg"
-	frame = cv2.imread(string1)
-	divider=6
-	frame = cv2.resize(frame, (0,0), fx=(1/divider), fy=(1/divider))	#verkleinern des Bildes	
-	cv2.imshow("in-frame", frame) #debug
-	#cv2.waitKey(0)
-	
-	pl=Parser(frame)
-	pl.sethsvfilter([35,0,0])
-	pl.processImages()
-	#getcolor(frame)
-	#for erg in pl.getResult():
-	#	cv2.imshow("erg", erg) #debug
-	#	cv2.waitKey(0)
-	i=i+1 """
-

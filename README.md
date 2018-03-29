@@ -1,8 +1,9 @@
 # DHBW-Bildverarbeitung-PWext
-Projekt im Modul digitale Bildverarbeitung mit dem Ziel Postits aus dem Bild einer Pinnwand zu gruppieren und in ein PDF zu exportieren.
+Analyse pictures of PostIt walls and generate a pdf file with all grouped same-color-PostIts.
+
 
 ## Dependencies
-Folgende Python Pakete werden benötigt:
+The following python packages are necasary for this project
  - reportlab
  - pillow
  - opencv
