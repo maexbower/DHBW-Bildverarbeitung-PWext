@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # this tool requires the following packages
 # reportlab
 # pil
@@ -14,15 +15,15 @@ def main(argv):
     try:
         opts, rest = getopt.getopt(argv,"ho:",["help","ofile="])
     except getopt.GetoptError:
-        print 'pdf.py -o <outputfile.pdf> file1 [file2] (Using of * in Filenames is possible)...'
+        print('pdf.py -o <outputfile.pdf> file1 [file2] (Using of * in Filenames is possible)...')
         sys.exit(2)
     for opt, arg in opts:
         if opt in ("-h", "--help"):
-            print 'pdf.py -o <outputfile.pdf> file1 [file2] (Using of * in Filenames is possible)...'
+            print('pdf.py -o <outputfile.pdf> file1 [file2] (Using of * in Filenames is possible)...')
             sys.exit()
         elif opt in ("-o", "--ofile"):
             outputfile = arg
-    print 'Output file is "', outputfile
+    print('Output file is "', outputfile)
     for file in rest:
         try:
             images.append(Image.open(file))
