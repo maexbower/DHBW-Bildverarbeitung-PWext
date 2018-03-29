@@ -5,9 +5,9 @@ Projekt im Modul digitale Bildverarbeitung mit dem Ziel Postits aus dem Bild ein
 Folgende Python Pakete werden benötigt:
  - reportlab
  - pillow
- - 
+ - opencv
 
  ## Run
 you need to add the output pdf path and at least one image as a param. * are allowed as placeholders in filenames.
 
-```python ./pdf.py -o test.pdf ./Bilder/*```
+```python ./main.py -o test.pdf ./Bilder/*```

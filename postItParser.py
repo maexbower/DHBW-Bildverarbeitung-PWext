@@ -1,18 +1,26 @@
+#!/usr/bin/python3
+# coding=UTF8
 #from PIL import Image
+
 import cv2
 import math
 import numpy as np
+from PIL import Image
 
 class Parser:
-    def __init__(self, images):
-        self._images = images
+    def __init__(self):
+        self._images = []
         self._resultImages = []
         self.lower_bound = (0,80,20)
         self.upper_bound = (0, 255, 255)
-        self.frame=0
-        self.mask=0
+        self.frame=None
+        self.mask=None
         self.filterrange=7
-        
+    def importImage(self, path):
+        try:
+            self._images.append(cv2.imread(path))
+        except BaseException as e:
+            print('Failed to load Image ', file, 'with error: ', e)
     def setImages(self, images):
         self._images = images
         
@@ -54,18 +62,19 @@ class Parser:
             res = cv2.bitwise_and(self.frame,self.frame,mask= self.mask)
             x,y,w,h = cv2.boundingRect(cnt)
             ret=res[y:y+h, x:x+w]
-            cv2.imshow("ret", ret) #debug
-            cv2.waitKey(0)
+            #cv2.imshow("ret", ret) #debug
+            #cv2.waitKey(0)
             self._resultImages.append(ret)
 		
     def processImages(self):
         # if the main programm wants to start processing again
         # please make this blocking
         print('processing Images')
-        self.frame=self._images
-        self.filtercolor()
-        self.processtree(0)
-        print('Image Count: ', str(len(self._resultImages)))
+        for _img in self._images:
+            self.frame=_img
+            self.filtercolor()
+            self.processtree(0)
+        #print('Image Count: ', str(len(self._resultImages)))
 
     def getmask(self):
         return(self.mask)
@@ -73,3 +82,11 @@ class Parser:
     def getResult(self):
         # keep source Images maybe?
         return self._resultImages
+    def getPILResult(self):
+        # You may need to convert the color.
+        #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        _results = []
+        for _img in self._resultImages:
+            _tmpImg = cv2.cvtColor(_img, cv2.COLOR_BGR2RGB)
+            _results.append(Image.fromarray(_tmpImg))
+        return _results

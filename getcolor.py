@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+# coding=UTF8
+
 import cv2
 import numpy as np
 def getcolor(frame):
@@ -31,7 +34,7 @@ def getcolor(frame):
 			y=y-val
 		elif(key ==ord('q')):
 			if(val==10):
-				val=1;
+				val=1
 			else:
 				val=10
 		else:

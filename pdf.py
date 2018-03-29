@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# coding=UTF8
 # this tool requires the following packages
 # reportlab
 # pil
@@ -6,75 +7,65 @@ from reportlab.pdfgen.canvas import Canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from PIL import Image
-import sys, getopt
-from postItParser import Parser
 
-def main(argv):
-    outputfile = 'test.pdf'
-    images = []
-    try:
-        opts, rest = getopt.getopt(argv,"ho:",["help","ofile="])
-    except getopt.GetoptError:
-        print('pdf.py -o <outputfile.pdf> file1 [file2] (Using of * in Filenames is possible)...')
-        sys.exit(2)
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            print('pdf.py -o <outputfile.pdf> file1 [file2] (Using of * in Filenames is possible)...')
-            sys.exit()
-        elif opt in ("-o", "--ofile"):
-            outputfile = arg
-    print('Output file is "', outputfile)
-    for file in rest:
+class PDFgenerator:
+    _outputfile = 'o.pdf'
+    _pageformat = A4
+    _canvas = None
+    _font = 'Helvetica'
+    _fontsize = 14
+    _width, _height = A4
+    _padding = { 'left': 2*cm, 'right': 1.5*cm, 'top': 1.5*cm, 'bottom': 1.5*cm}
+    _innerWidth = _width - _padding['left'] - _padding['right']
+    _innerHeight = _height - _padding['top'] - _padding['bottom']
+    def __init__(self, outputfile = None):
+        if outputfile is not None:
+            self.setOutput(outputfile)
+    def setOutput(self, path):
+        if self._canvas is not None:
+            print('DEBUG: Pfad kann nach beginn des Erstellens nicht geändert werden')
+            return 1
+        self._outputfile = path
+    def createFile(self):
+        self._canvas = Canvas(self._outputfile, pagesize=self._pageformat)
+    def saveFile(self):
+        self._canvas.save()
+        self._canvas = None
+    def insertNewPage(self):
+        self._canvas.showPage()
+    def insertImage(self, image, x = None, y = None, width = None, height = None, keepAspectRatio=True):
+        _width = width
+        _height = height
+        _x = x
+        _y = y
+        _keepAspectRatio = keepAspectRatio
+        if width is None:
+            _width = self._innerWidth
+        if height is None:
+            _height = self._innerHeight
+        if x is None:
+            _x = self._padding['left']
+        if y is None:
+            _y = self._padding['bottom']
         try:
-            images.append(Image.open(file))
-        except BaseException:
-            print('Failed to open Image ', file)
-    for index, item in enumerate(images):
-        images[index] = item.rotate(-90, resample=0, expand=1)
-    parser = Parser(images)
-    parser.processImages()
-    resultImages = parser.getResult()
+            self._canvas.drawInlineImage(image ,x=_x, y=_y, width=_width, height=_height,  preserveAspectRatio=_keepAspectRatio, anchor='c')
+            self.insertNewPage()
+        except BaseException as e:
+            print(image)
+            print('failed to process Image', e)
+    def insertText(self, x, y, string, fontsize=None, fontname=None):
+        _fontsize = fontsize
+        _fontname = fontname
+        if fontsize is not None:
+            _fontsize = self._fontsize
+        if fontname is not None:
+            _fontname = self._font
+        print('fontsize:', _fontsize)
+        print('fontname:', _fontname)
 
-    pdf = Canvas(outputfile, pagesize=A4)
-    width, height = A4
-    padding = { 'left': 2*cm, 'right': 1.5*cm, 'top': 1.5*cm, 'bottom': 1.5*cm}
-    innerWidth = width - padding['left'] - padding['right']
-    innerHeight = height-padding['top']-padding['bottom']
-    # move the origin up and to the left
-    pdf.translate(padding['left'],padding['bottom'])
-    # define a large font
-    pdf.setFont("Helvetica", 14)
-    # choose some colors
-    pdf.setStrokeColorRGB(0.2,0.5,0.3)
-    pdf.setFillColorRGB(1,0,1)
-    # draw border lines
-    pdf.line(0,0,0,innerHeight)
-    pdf.line(innerWidth ,0, innerWidth , innerHeight)
-    pdf.line(0,0,innerWidth,0)
-    pdf.line(0 ,innerHeight, innerWidth , innerHeight)
-    # draw a rectangle
-    pdf.rect(0.2*cm,0.2*cm,1*cm,1.5*cm, fill=1)
-    # make text go straight up
-    pdf.rotate(90)
-    # change color
-    pdf.setFillColorRGB(0,0,0.77)
-    # say hello (note after rotate the y coord needs to be negative!)
-    pdf.drawString(0.3*cm, -cm, "Hello World")
-    pdf.showPage()
-    #print(format(images[0]))
-    #pdf.drawInlineImage(origImage ,x=padding['left'], y=padding['bottom'], width=innerWidth, height=innerHeight,  preserveAspectRatio=True, anchor='c')
-    #pdf.showPage()
-    for index, item in enumerate(resultImages):
-        print(type(item))
-        try:
-            pdf.drawInlineImage(item ,x=padding['left'], y=padding['bottom'], width=innerWidth, height=innerHeight,  preserveAspectRatio=True, anchor='c')
-        except AttributeError:
-            print('failed to process Image', format(item))
-        pdf.showPage()
-    pdf.save()
-
-
-
-
-if __name__ == "__main__":
-   main(sys.argv[1:])
+        self._canvas.setFont(_fontname, _fontsize, leading = None)
+        self._canvas.drawString(x, y, string)
+    def getOutputFile(self):
+        return self._outputfile
+    def getPadding(self):
+        return self._padding
