@@ -72,10 +72,10 @@ class Parser:
         #durchläuft effizient den Konturen Baum
         if self.hierarchy is None:
             return
-        cnt=self.contours[nodeindexnumber]
-        nodemetadata=self.hierarchy[nodeindexnumber]
-        signvalue= self.processcontour(cnt)
-        if(nodemetadata[0]!=(-1)):	#weitere Konturen sind auf der Ebene Vorhanden
+        cnt = self.contours[nodeindexnumber]
+        nodemetadata = self.hierarchy[nodeindexnumber]
+        signvalue = self.processcontour(cnt)
+        if( nodemetadata[0] != (-1) ):	#weitere Konturen sind auf der Ebene Vorhanden
             self.processtree(nodemetadata[0])
 			
     def processcontour(self,cnt):
@@ -83,20 +83,38 @@ class Parser:
         # Rechne ein Rechteck um die Konturen
         x,y,w,h = cv2.boundingRect(cnt)
         if(numberofedges > 3 and (w > 20 * self._devider) and (h > 20 * self._devider)):
+            #x,y,w,h = cv2.boundingRect(cnt)
+            partImg = self.frame[y:y+h, x:x+w]
             mask = np.full((self.frame.shape[0], self.frame.shape[1]), 0, dtype=np.uint8) #create empty mask
-            cv2.fillPoly(mask, pts =cnt, color=(0))
+            cv2.fillPoly(mask, pts=cnt, color=0)
+            #cv2.imshow("mask", mask) #debug
+            #cv2.waitKey(0)
+            partMask = self.mask[y:y+h, x:x+w]
+            #cv2.imshow("partmask", partMask) #debug
+            #cv2.waitKey(0)
             # Debug wegen Fehler beim Runden nach Skalierung
             #print('frame: ', self.frame.shape[0])
             #print('mask: ', self.mask.shape[0])
             #print('frame: ', self.frame.shape[1])
             #print('mask: ', self.mask.shape[1])
             # Wende Maske auf Bild an.
-            res = cv2.bitwise_and(self.frame,self.frame,mask= self.mask)
-            x,y,w,h = cv2.boundingRect(cnt)
-            ret=res[y:y+h, x:x+w]
-            #cv2.imshow("ret", ret) #debug
+            #white = np.full((partImg.shape[0], partImg.shape[1]), (255, 255, 255), dtype=np.uint8)
+            white = np.zeros((partImg.shape[0],partImg.shape[1], 3 ), np.uint8)
+            white[:,:] = (255,255,255)
+            white_mask = cv2.bitwise_not(partMask)
+            white_img = cv2.bitwise_and(white, white, mask=white_mask)
+            ret = cv2.bitwise_and(partImg, partImg, mask=partMask)
+            fixed_img = cv2.addWeighted(ret, 1, white_img, 1, 1)
+            # geht auch irgendwie schneller
+            #for x in range(0,ret.shape[0]) :
+            #    for y in range(0,ret.shape[1]) :
+            #        if ret[x,y][0] == 0 and ret[x,y][1] == 0 and ret[x,y][2] == 0 :
+            #            ret[x,y] = (255,255,255)
+            #x,y,w,h = cv2.boundingRect(cnt)
+            #ret=res[y:y+h, x:x+w]
+            #cv2.imshow("ret", fixed_img) #debug
             #cv2.waitKey(0)
-            self._resultImages.append(ret)
+            self._resultImages.append(fixed_img)
 		
     def processImages(self, startNum=0):
         # if the main programm wants to start processing again
