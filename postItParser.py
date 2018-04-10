@@ -28,7 +28,7 @@ class Parser:
                 return
             self._images.append(_img)
         except BaseException as e:
-            print('Failed to load Image ', file, 'with error: ', e)
+            print('Failed to load Image ', path, 'with error: ', e)
 
     def setImages(self, images):
         self._images = images
@@ -45,16 +45,24 @@ class Parser:
         self.upper_bound[0] = (hsv[0]+self.filterrange)
 		
     def filtercolor(self):
+        # Skaliere Bild zur schnelleren Verarbeiten
         _smallImg = cv2.resize(self.frame, (0,0), fx=(1 / self._devider) ,fy=(1 / self._devider)) 
         hsv = cv2.cvtColor(_smallImg, cv2.COLOR_BGR2HSV)
+        # Leichte unschärfe verhindert das Erkennen von Details
         hsv = cv2.medianBlur(hsv, 15)
         #cv2.imshow("hsv", hsv) #debug
         #cv2.waitKey(0)
+        # Erstelle Maske auf Basis der definierten Grenzfarben
         self.mask = cv2.inRange(hsv, self.lower_bound, self.upper_bound)
         self.mask = cv2.resize(self.mask, (0,0), fx=(self._devider) ,fy=(self._devider)) 
         #cv2.imshow("mask", self.mask) #debug
         #cv2.waitKey(0)
+        # Erkenne die Konturen der Maske
+        # im2 .. eingebenes Bild mit Konturen (in dem Fall die Maske)
+        # self.contours .. Array mit den Konturen
+        # hierachy .. Baumstruktur der Konturen. Innere Konturen sind Äußeren untergeordnet (z.B. die Kontur der Schrift ist auf einer niedrigeren Ebene als das Postit)
         im2, self.contours, hierarchy = cv2.findContours(self.mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        # Der gesammte Baum ist im ersten Element von hierachy
         if hierarchy is not None:
             self.hierarchy=hierarchy[0]
         else:
@@ -72,14 +80,17 @@ class Parser:
 			
     def processcontour(self,cnt):
         numberofedges = len(cnt)
+        # Rechne ein Rechteck um die Konturen
         x,y,w,h = cv2.boundingRect(cnt)
         if(numberofedges > 3 and (w > 20 * self._devider) and (h > 20 * self._devider)):
             mask = np.full((self.frame.shape[0], self.frame.shape[1]), 0, dtype=np.uint8) #create empty mask
             cv2.fillPoly(mask, pts =cnt, color=(0))
+            # Debug wegen Fehler beim Runden nach Skalierung
             #print('frame: ', self.frame.shape[0])
             #print('mask: ', self.mask.shape[0])
             #print('frame: ', self.frame.shape[1])
             #print('mask: ', self.mask.shape[1])
+            # Wende Maske auf Bild an.
             res = cv2.bitwise_and(self.frame,self.frame,mask= self.mask)
             x,y,w,h = cv2.boundingRect(cnt)
             ret=res[y:y+h, x:x+w]
@@ -87,11 +98,11 @@ class Parser:
             #cv2.waitKey(0)
             self._resultImages.append(ret)
 		
-    def processImages(self):
+    def processImages(self, startNum=0):
         # if the main programm wants to start processing again
         # please make this blocking
         print('processing Images')
-        for _img in self._images:
+        for _img in self._images[startNum:]:
             for index in self._colorTable:
                 print('suche Farbe:', index, ' (', self._colorTable[index], ')')
                 self.sethsvfilter([self._colorTable[index],0,0])
@@ -103,14 +114,14 @@ class Parser:
     def getmask(self):
         return(self.mask)
              
-    def getResult(self):
+    def getResult(self,  startNum=0):
         # keep source Images maybe?
-        return self._resultImages
-    def getPILResult(self):
+        return self._resultImages[startNum:]
+    def getPILResult(self, startNum=0):
         # You may need to convert the color.
         #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         _results = []
-        for _img in self._resultImages:
+        for _img in self._resultImages[startNum:]:
             _tmpImg = cv2.cvtColor(_img, cv2.COLOR_BGR2RGB)
             _results.append(Image.fromarray(_tmpImg))
         return _results

@@ -34,15 +34,22 @@ class PDFgenerator:
     def insertNewPage(self):
         self._canvas.showPage()
     def insertImage(self, image, x = None, y = None, width = None, height = None, keepAspectRatio=True):
+        im_width, im_height = image.size
         _width = width
         _height = height
         _x = x
         _y = y
         _keepAspectRatio = keepAspectRatio
         if width is None:
-            _width = self._innerWidth
+            if im_width >= self._innerWidth :
+                _width = self._innerWidth
+            else:
+                _width = im_width
         if height is None:
-            _height = self._innerHeight
+            if im_height >= self._innerHeight:
+                _height = self._innerHeight
+            else:
+                _height = im_height
         if x is None:
             _x = self._padding['left']
         if y is None:
@@ -53,17 +60,10 @@ class PDFgenerator:
         except BaseException as e:
             print(image)
             print('failed to process Image', e)
-    def insertText(self, x, y, string, fontsize=None, fontname=None):
-        _fontsize = fontsize
-        _fontname = fontname
-        if fontsize is not None:
-            _fontsize = self._fontsize
-        if fontname is not None:
-            _fontname = self._font
-        print('fontsize:', _fontsize)
-        print('fontname:', _fontname)
-
-        self._canvas.setFont(_fontname, _fontsize, leading = None)
+    def insertText(self, x, y, string, fontsize=_fontsize, fontname=_font):
+        print('fontsize:', fontsize)
+        print('fontname:', fontname)
+        self._canvas.setFont(fontname, fontsize)
         self._canvas.drawString(x, y, string)
     def getOutputFile(self):
         return self._outputfile
